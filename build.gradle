@@ -1,19 +1,5 @@
 apply plugin: 'java'
-apply plugin: 'eclipse'
-apply plugin: 'maven'
 apply plugin: 'checkstyle'
-
-group = "${groupName}"
-eclipse.classpath.downloadJavadoc = true
-
-checkstyle {
-  configFile = new File(rootDir, "config/checkstyle/checkstyle.xml")
-  toolVersion = "6.11.2"
-}
-
-apply plugin: 'findbugs'
-
-findbugs { ignoreFailures = true }
 
 buildscript {
   repositories {
@@ -22,30 +8,48 @@ buildscript {
   }
 }
 
-configurations.all {
-  // check for updates every build
-  resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
-}
 
+allprojects {
 
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
-
-task wrapper(type: Wrapper) { gradleVersion = '2.11' }
-
-version = new Version(
-    version: "$version"
-    )
-    
-class Version {
-  String version
-
-  String toString() {
-    return "$version"
+  repositories {
+    mavenCentral()
   }
-}
 
-def configDir = new File(buildscript.sourceFile.parentFile, 'config')
+  apply plugin: 'java'
+  apply plugin: 'eclipse'
+  apply plugin: 'maven'
+  apply plugin: 'checkstyle'
+
+  group = "${groupName}"
+  eclipse.classpath.downloadJavadoc = true
+
+  checkstyle {
+    configFile = new File(rootDir, "config/checkstyle/checkstyle.xml")
+    toolVersion = "6.11.2"
+  }
+
+  apply plugin: 'findbugs'
+
+  findbugs { ignoreFailures = true }
+
+
+
+  configurations.all {
+    // check for updates every build
+    resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+  }
+
+
+  sourceCompatibility = 1.8
+  targetCompatibility = 1.8
+
+  task wrapper(type: Wrapper) { gradleVersion = '2.11' }
+
+  version = new Version(
+    version: "$version"
+  )
+
+  def configDir = new File(buildscript.sourceFile.parentFile, 'config')
 
   task writeBuildProperties { 
     Properties props = new Properties() 
@@ -64,12 +68,12 @@ def configDir = new File(buildscript.sourceFile.parentFile, 'config')
    
   tasks.jar.dependsOn(writeBuildProperties)
 
-jar {
-  pom {}.writeTo("pom.xml")
-  from(".") {
-    include 'pom.xml' into("META-INF/maven/$project.group/$project.name")
+  jar {
+    pom {}.writeTo("pom.xml")
+    from(".") {
+      include 'pom.xml' into("META-INF/maven/$project.group/$project.name")
+    }
   }
-}
 
   tasks.withType(Test) {
     systemProperty 'java.library.path', file( "$buildDir/natives/windows" )
@@ -82,18 +86,34 @@ jar {
   }
 
 
-task jarSources(type:Jar, dependsOn: classes){
-  pom {}.writeTo("pom.xml")
-  from(".") {
-    include 'pom.xml' into("META-INF/maven/$project.group/$project.name")
+  task jarSources(type:Jar, dependsOn: classes){
+    pom {}.writeTo("pom.xml")
+    from(".") {
+      include 'pom.xml' into("META-INF/maven/$project.group/$project.name")
+    }
+    classifier = 'sources'
+    from sourceSets.main.allSource
   }
-  classifier = 'sources'
-  from sourceSets.main.allSource
+
+  artifacts {
+    archives file('changelog.md')
+    archives jarSources
+  }
+
+  dependencies {
+    testCompile "junit:junit:4.12"
+  	testCompile "org.testfx:testfx-core:4.0.+"
+    testCompile "org.testfx:testfx-junit:4.0.+"
+  }
+
 }
 
-artifacts {
-  archives file('changelog.md')
-  archives jarSources
+class Version {
+  String version
+
+  String toString() {
+    return "$version"
+  }
 }
 
 def getDate() {

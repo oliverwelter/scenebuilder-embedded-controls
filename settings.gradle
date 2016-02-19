@@ -1,0 +1,5 @@
+rootProject.name = "scenebuilder-embedded-controls"
+include(
+    'basiccontrols',
+    'extendedcontrols'
+)
