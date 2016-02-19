@@ -1,0 +1,16 @@
+bin
+build
+generated
+caches
+native
+.checkstyle
+.project
+.factorypath
+.settings
+.classpath
+.gradle
+*~*
+pom.xml
+*.log
+.springBeans
+*.swp

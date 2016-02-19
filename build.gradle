@@ -1,0 +1,103 @@
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'maven'
+apply plugin: 'checkstyle'
+
+group = "${groupName}"
+eclipse.classpath.downloadJavadoc = true
+
+checkstyle {
+  configFile = new File(rootDir, "config/checkstyle/checkstyle.xml")
+  toolVersion = "6.11.2"
+}
+
+apply plugin: 'findbugs'
+
+findbugs { ignoreFailures = true }
+
+buildscript {
+  repositories {
+    maven { url "https://plugins.gradle.org/m2/" }
+    jcenter()
+  }
+}
+
+configurations.all {
+  // check for updates every build
+  resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+}
+
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+task wrapper(type: Wrapper) { gradleVersion = '2.11' }
+
+version = new Version(
+    version: "$version"
+    )
+    
+class Version {
+  String version
+
+  String toString() {
+    return "$version"
+  }
+}
+
+def configDir = new File(buildscript.sourceFile.parentFile, 'config')
+
+  task writeBuildProperties { 
+    Properties props = new Properties() 
+   
+    props.setProperty('VERSION', "$version")
+    props.setProperty('BUILD_NUMBER', "$buildNumber")
+    props.setProperty('BUILD_TIMESTAMP', getDate())
+    
+    if(!project.buildDir.exists()) {
+      project.buildDir.mkdirs()
+    }
+    
+    File propsFile = new File("$buildDir/build.properties")  
+    props.store(propsFile.newWriter(), null)
+  }
+   
+  tasks.jar.dependsOn(writeBuildProperties)
+
+jar {
+  pom {}.writeTo("pom.xml")
+  from(".") {
+    include 'pom.xml' into("META-INF/maven/$project.group/$project.name")
+  }
+}
+
+  tasks.withType(Test) {
+    systemProperty 'java.library.path', file( "$buildDir/natives/windows" )
+    if(project.hasProperty("useMonocle")) {
+      systemProperty 'glass.platform', 'Monocle'
+      systemProperty 'monocle.platform', 'Headless'
+      systemProperty 'testfx.robot', 'glass'
+      systemProperty 'prism.order', 'sw'
+    }
+  }
+
+
+task jarSources(type:Jar, dependsOn: classes){
+  pom {}.writeTo("pom.xml")
+  from(".") {
+    include 'pom.xml' into("META-INF/maven/$project.group/$project.name")
+  }
+  classifier = 'sources'
+  from sourceSets.main.allSource
+}
+
+artifacts {
+  archives file('changelog.md')
+  archives jarSources
+}
+
+def getDate() {
+  def date = new Date()
+  def formattedDate = date.format('yyyyMMddHHmmss')
+  return formattedDate
+}
