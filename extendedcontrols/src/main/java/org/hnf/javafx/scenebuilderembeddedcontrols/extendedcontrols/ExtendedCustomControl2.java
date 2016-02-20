@@ -6,11 +6,11 @@ import java.net.URL;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.layout.GridPane;
 
-public class ExtendedCustomControl extends GridPane {
+public class ExtendedCustomControl2 extends GridPane {
 
-	public ExtendedCustomControl() {
+	public ExtendedCustomControl2() {
 
-		final URL url = getClass().getResource("extended-custom-control.fxml");
+		final URL url = getClass().getResource("extended-custom-control2.fxml");
 
 		if (url == null) {
 			throw new IllegalStateException("dsfsdf");
